@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>💬 Go Realtime Chat</title>
+
   <style>
     * {
       margin: 0;
@@ -39,6 +40,7 @@
         opacity: 0;
         transform: translateY(20px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -81,6 +83,7 @@
       0%, 100% {
         opacity: 1;
       }
+
       50% {
         opacity: 0.5;
       }
@@ -123,6 +126,7 @@
         opacity: 0;
         transform: translateY(10px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -256,6 +260,7 @@
         opacity: 0;
         transform: scale(0.9);
       }
+
       to {
         opacity: 1;
         transform: scale(1);
@@ -313,133 +318,404 @@
     }
   </style>
 </head>
+
 <body>
+
   <div class="container">
+
     <div class="header">
       <h1>
         <span class="status-indicator"></span>
         💬 Go Chat
       </h1>
+
       <p>Percakapan real-time dengan Go WebSocket</p>
     </div>
+
     <div class="messages-container" id="messages"></div>
+
     <div class="input-area">
-      <input 
-        id="msgInput" 
-        placeholder="Ketik pesan..." 
-        autocomplete="off" 
+      <input
+        id="msgInput"
+        placeholder="Ketik pesan..."
+        autocomplete="off"
       />
+
       <button id="sendBtn" onclick="sendMsg()">➤</button>
     </div>
+
   </div>
 
   <script>
+
     let username = "";
     let isConnected = false;
 
-    // Username Dialog
+    // ==============================
+    // USERNAME PROMPT
+    // ==============================
+
     function showUsernamePrompt() {
+
       const overlay = document.createElement("div");
       overlay.className = "username-prompt";
-      
+
       const dialog = document.createElement("div");
       dialog.className = "username-dialog";
+
       dialog.innerHTML = `
         <h2>👤 Masukkan Nama Kamu</h2>
-        <input 
-          id="usernameInput" 
-          type="text" 
-          placeholder="Nama pengguna..." 
+
+        <input
+          id="usernameInput"
+          type="text"
+          placeholder="Nama pengguna..."
           autocomplete="off"
         />
-        <button onclick="setUsername()">Mulai Chat</button>
+
+        <button onclick="setUsername()">
+          Mulai Chat
+        </button>
       `;
-      
+
       overlay.appendChild(dialog);
       document.body.appendChild(overlay);
-      
-      document.getElementById("usernameInput").focus();
-      document.getElementById("usernameInput").addEventListener("keypress", (e) => {
-        if (e.key === "Enter") setUsername();
+
+      const usernameInput =
+        document.getElementById("usernameInput");
+
+      usernameInput.focus();
+
+      usernameInput.addEventListener("keypress", (e) => {
+
+        if (e.key === "Enter") {
+          setUsername();
+        }
+
       });
+
     }
+
+
+    // ==============================
+    // SET USERNAME
+    // ==============================
 
     function setUsername() {
-      const input = document.getElementById("usernameInput");
-      const name = input.value.trim() || "Anonim";
+
+      const input =
+        document.getElementById("usernameInput");
+
+      const name =
+        input.value.trim() || "Anonim";
+
       username = name;
-      document.body.removeChild(document.querySelector(".username-prompt"));
+
+      const prompt =
+        document.querySelector(".username-prompt");
+
+      if (prompt) {
+        prompt.remove();
+      }
+
       connectWebSocket();
+
     }
+
+
+    // ==============================
+    // CONNECT WEBSOCKET
+    // ==============================
 
     function connectWebSocket() {
-      const ws = new WebSocket(`ws://${location.host}/ws?username=${encodeURIComponent(username)}`);
-      const messagesEl = document.getElementById("messages");
-      const input = document.getElementById("msgInput");
+
+      /*
+       * HTTP  -> ws://
+       * HTTPS -> wss://
+       */
+
+      const protocol =
+        location.protocol === "https:"
+          ? "wss:"
+          : "ws:";
+
+      const wsUrl =
+        `${protocol}//${location.host}/ws?username=${encodeURIComponent(username)}`;
+
+      console.log("Connecting WebSocket:", wsUrl);
+
+      const ws =
+        new WebSocket(wsUrl);
+
+      const messagesEl =
+        document.getElementById("messages");
+
+      const input =
+        document.getElementById("msgInput");
+
+
+      // ==============================
+      // CONNECTED
+      // ==============================
 
       ws.onopen = () => {
+
         isConnected = true;
+
+        console.log("WebSocket connected");
+
         input.focus();
+
       };
+
+
+      // ==============================
+      // RECEIVE MESSAGE
+      // ==============================
 
       ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        const div = document.createElement("div");
-        
-        if (msg.type === "join" || msg.type === "leave") {
-          div.className = "system-message";
-          const action = msg.type === "join" ? "bergabung" : "pergi";
-          div.textContent = `✦ ${msg.username} ${action}`;
-        } else {
-          div.className = `message ${msg.username === username ? "own" : "other"}`;
-          div.innerHTML = `
-            <div class="message-content">
-              ${msg.username !== username ? `<div class="message-header">${msg.username}</div>` : ""}
-              <div>${escapeHtml(msg.content)}</div>
-              ${msg.username === username ? `<div class="message-header">${new Date().toLocaleTimeString("id-ID", {hour: "2-digit", minute: "2-digit"})}</div>` : ""}
-            </div>
-          `;
+
+        try {
+
+          const msg =
+            JSON.parse(event.data);
+
+          const div =
+            document.createElement("div");
+
+
+          // JOIN / LEAVE
+
+          if (
+            msg.type === "join" ||
+            msg.type === "leave"
+          ) {
+
+            div.className =
+              "system-message";
+
+            const action =
+              msg.type === "join"
+                ? "bergabung"
+                : "pergi";
+
+            div.textContent =
+              `✦ ${msg.username} ${action}`;
+
+          }
+
+
+          // CHAT MESSAGE
+
+          else {
+
+            div.className =
+              `message ${
+                msg.username === username
+                  ? "own"
+                  : "other"
+              }`;
+
+            div.innerHTML = `
+
+              <div class="message-content">
+
+                ${
+                  msg.username !== username
+                    ? `
+                      <div class="message-header">
+                        ${escapeHtml(msg.username)}
+                      </div>
+                    `
+                    : ""
+                }
+
+                <div>
+                  ${escapeHtml(msg.content)}
+                </div>
+
+                ${
+                  msg.username === username
+                    ? `
+                      <div class="message-header">
+
+                        ${new Date().toLocaleTimeString(
+                          "id-ID",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          }
+                        )}
+
+                      </div>
+                    `
+                    : ""
+                }
+
+              </div>
+
+            `;
+
+          }
+
+
+          messagesEl.appendChild(div);
+
+          messagesEl.scrollTop =
+            messagesEl.scrollHeight;
+
         }
-        
-        messagesEl.appendChild(div);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+
+        catch (error) {
+
+          console.error(
+            "Gagal membaca message:",
+            error
+          );
+
+        }
+
       };
 
-      ws.onerror = () => {
+
+      // ==============================
+      // ERROR
+      // ==============================
+
+      ws.onerror = (error) => {
+
+        console.error(
+          "WebSocket error:",
+          error
+        );
+
         isConnected = false;
-        alert("Koneksi terputus. Silakan refresh halaman.");
+
       };
+
+
+      // ==============================
+      // CLOSE
+      // ==============================
 
       ws.onclose = () => {
+
+        console.log(
+          "WebSocket disconnected"
+        );
+
         isConnected = false;
+
       };
 
+
+      /*
+       * Simpan WebSocket secara global
+       * supaya sendMsg() bisa menggunakannya.
+       */
+
       window.ws = ws;
+
     }
+
+
+    // ==============================
+    // SEND MESSAGE
+    // ==============================
 
     function sendMsg() {
-      const input = document.getElementById("msgInput");
-      if (!input.value.trim() || !isConnected) return;
-      
-      ws.send(JSON.stringify({ content: input.value }));
+
+      const input =
+        document.getElementById("msgInput");
+
+
+      if (
+        !input.value.trim() ||
+        !isConnected
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+       * Pastikan WebSocket benar-benar OPEN
+       */
+
+      if (
+        !window.ws ||
+        window.ws.readyState !== WebSocket.OPEN
+      ) {
+
+        alert(
+          "WebSocket belum terhubung."
+        );
+
+        return;
+
+      }
+
+
+      window.ws.send(
+        JSON.stringify({
+          content: input.value
+        })
+      );
+
+
       input.value = "";
+
       input.focus();
+
     }
+
+
+    // ==============================
+    // ESCAPE HTML
+    // ==============================
 
     function escapeHtml(text) {
-      const div = document.createElement("div");
+
+      const div =
+        document.createElement("div");
+
       div.textContent = text;
+
       return div.innerHTML;
+
     }
 
-    document.getElementById("msgInput").addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMsg();
-      }
-    });
+
+    // ==============================
+    // ENTER TO SEND
+    // ==============================
+
+    document
+      .getElementById("msgInput")
+      .addEventListener("keydown", (e) => {
+
+        if (
+          e.key === "Enter" &&
+          !e.shiftKey
+        ) {
+
+          e.preventDefault();
+
+          sendMsg();
+
+        }
+
+      });
+
+
+    // ==============================
+    // START
+    // ==============================
 
     showUsernamePrompt();
+
   </script>
+
 </body>
 </html>
