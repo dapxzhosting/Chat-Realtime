@@ -16,10 +16,13 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       height: 100vh;
+      height: 100dvh;
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 10px;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     .container {
@@ -92,6 +95,7 @@
     .messages-container {
       flex: 1;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding: 15px;
       background: #f8f9fa;
       display: flex;
@@ -197,6 +201,9 @@
       font-family: inherit;
       transition: all 0.3s ease;
       outline: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
     }
 
     #msgInput:focus {
@@ -305,15 +312,186 @@
       box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
     }
 
-    @media (max-width: 480px) {
+    @media (max-width: 768px) {
+      body {
+        padding: 0;
+      }
+
       .container {
         max-width: 100%;
         height: 100vh;
         border-radius: 0;
       }
 
+      .header {
+        padding: 15px;
+      }
+
+      .header h1 {
+        font-size: 20px;
+      }
+
+      .header p {
+        font-size: 11px;
+      }
+
+      .messages-container {
+        padding: 12px;
+        gap: 8px;
+      }
+
       .message-content {
         max-width: 85%;
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+
+      .message-header {
+        font-size: 11px;
+      }
+
+      .input-area {
+        padding: 12px;
+        gap: 6px;
+      }
+
+      #msgInput {
+        padding: 10px 12px;
+        font-size: 16px;
+        border-radius: 20px;
+      }
+
+      #sendBtn {
+        padding: 10px 15px;
+        font-size: 16px;
+        min-width: 50px;
+      }
+
+      .username-dialog {
+        padding: 20px;
+        margin: 20px;
+        max-width: 90%;
+      }
+
+      .username-dialog h2 {
+        font-size: 18px;
+        margin-bottom: 12px;
+      }
+
+      .username-dialog input {
+        padding: 10px;
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+
+      .username-dialog button {
+        padding: 10px;
+        font-size: 16px;
+      }
+
+      .system-message {
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        max-width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0;
+      }
+
+      .header {
+        padding: 12px;
+      }
+
+      .header h1 {
+        font-size: 18px;
+        gap: 5px;
+      }
+
+      .header p {
+        font-size: 10px;
+      }
+
+      .messages-container {
+        padding: 10px;
+        gap: 6px;
+      }
+
+      .message-content {
+        max-width: 90%;
+        padding: 8px 10px;
+        font-size: 12px;
+        border-radius: 12px;
+      }
+
+      .message-header {
+        font-size: 10px;
+      }
+
+      .input-area {
+        padding: 10px;
+        gap: 5px;
+        position: relative;
+        z-index: 10;
+      }
+
+      #msgInput {
+        padding: 10px 12px;
+        font-size: 16px;
+        border-radius: 18px;
+      }
+
+      #msgInput::placeholder {
+        font-size: 13px;
+      }
+
+      #sendBtn {
+        padding: 10px 12px;
+        font-size: 16px;
+        min-width: 45px;
+      }
+
+      .username-prompt {
+        z-index: 1001;
+      }
+
+      .username-dialog {
+        padding: 20px;
+        margin: 20px;
+        max-width: calc(100% - 40px);
+        width: 100%;
+      }
+
+      .username-dialog h2 {
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+
+      .username-dialog input {
+        padding: 12px;
+        font-size: 16px;
+        margin-bottom: 12px;
+        border-radius: 6px;
+      }
+
+      .username-dialog button {
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 6px;
+      }
+
+      .system-message {
+        font-size: 10px;
+        margin: 4px 0;
+        padding: 4px;
+      }
+
+      .status-indicator {
+        width: 6px;
+        height: 6px;
       }
     }
   </style>
