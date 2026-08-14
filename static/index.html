@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💬 Go Realtime Chat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 500px;
+      height: 90vh;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      animation: slideUp 0.4s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .header p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #4ade80;
+      border-radius: 50%;
+      margin-right: 5px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      background: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .messages-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .messages-container::-webkit-scrollbar-track {
+      background: #e9ecef;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb {
+      background: #adb5bd;
+      border-radius: 3px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb:hover {
+      background: #868e96;
+    }
+
+    .message {
+      display: flex;
+      animation: messageIn 0.3s ease-out;
+    }
+
+    @keyframes messageIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message-content {
+      max-width: 70%;
+      word-wrap: break-word;
+      padding: 10px 15px;
+      border-radius: 15px;
+      background: white;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .message.own {
+      justify-content: flex-end;
+    }
+
+    .message.own .message-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .message.other .message-content {
+      background: white;
+      color: #333;
+    }
+
+    .message-header {
+      font-size: 12px;
+      margin-bottom: 3px;
+      opacity: 0.7;
+    }
+
+    .message.own .message-header {
+      text-align: right;
+      color: white;
+    }
+
+    .message.other .message-header {
+      color: #666;
+    }
+
+    .system-message {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      font-style: italic;
+      margin: 5px 0;
+      padding: 5px;
+    }
+
+    .input-area {
+      padding: 15px;
+      background: white;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      gap: 8px;
+    }
+
+    #msgInput {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid #e9ecef;
+      border-radius: 25px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    #msgInput:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    #msgInput::placeholder {
+      color: #adb5bd;
+    }
+
+    #sendBtn {
+      padding: 12px 25px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 60px;
+    }
+
+    #sendBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    #sendBtn:active {
+      transform: translateY(0);
+    }
+
+    .username-prompt {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .username-dialog {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      animation: scaleIn 0.3s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .username-dialog h2 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .username-dialog input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .username-dialog input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .username-dialog button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .username-dialog button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        max-width: 100%;
+        height: 100vh;
+        border-radius: 0;
+      }
+
+      .message-content {
+        max-width: 85%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>
+        <span class="status-indicator"></span>
+        💬 Go Chat
+      </h1>
+      <p>Percakapan real-time dengan Go WebSocket</p>
+    </div>
+    <div class="messages-container" id="messages"></div>
+    <div class="input-area">
+      <input 
+        id="msgInput" 
+        placeholder="Ketik pesan..." 
+        autocomplete="off" 
+      />
+      <button id="sendBtn" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+
+  <script>
+    let username = "";
+    let isConnected = false;
+
+    // Username Dialog
+    function showUsernamePrompt() {
+      const overlay = document.createElement("div");
+      overlay.className = "username-prompt";
+      
+      const dialog = document.createElement("div");
+      dialog.className = "username-dialog";
+      dialog.innerHTML = `
+        <h2>👤 Masukkan Nama Kamu</h2>
+        <input 
+          id="usernameInput" 
+          type="text" 
+          placeholder="Nama pengguna..." 
+          autocomplete="off"
+        />
+        <button onclick="setUsername()">Mulai Chat</button>
+      `;
+      
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+      
+      document.getElementById("usernameInput").focus();
+      document.getElementById("usernameInput").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") setUsername();
+      });
+    }
+
+    function setUsername() {
+      const input = document.getElementById("usernameInput");
+      const name = input.value.trim() || "Anonim";
+      username = name;
+      document.body.removeChild(document.querySelector(".username-prompt"));
+      connectWebSocket();
+    }
+
+    function connectWebSocket() {
+      const ws = new WebSocket(`ws://${location.host}/ws?username=${encodeURIComponent(username)}`);
+      const messagesEl = document.getElementById("messages");
+      const input = document.getElementById("msgInput");
+
+      ws.onopen = () => {
+        isConnected = true;
+        input.focus();
+      };
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        const div = document.createElement("div");
+        
+        if (msg.type === "join" || msg.type === "leave") {
+          div.className = "system-message";
+          const action = msg.type === "join" ? "bergabung" : "pergi";
+          div.textContent = `✦ ${msg.username} ${action}`;
+        } else {
+          div.className = `message ${msg.username === username ? "own" : "other"}`;
+          div.innerHTML = `
+            <div class="message-content">
+              ${msg.username !== username ? `<div class="message-header">${msg.username}</div>` : ""}
+              <div>${escapeHtml(msg.content)}</div>
+              ${msg.username === username ? `<div class="message-header">${new Date().toLocaleTimeString("id-ID", {hour: "2-digit", minute: "2-digit"})}</div>` : ""}
+            </div>
+          `;
+        }
+        
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      };
+
+      ws.onerror = () => {
+        isConnected = false;
+        alert("Koneksi terputus. Silakan refresh halaman.");
+      };
+
+      ws.onclose = () => {
+        isConnected = false;
+      };
+
+      window.ws = ws;
+    }
+
+    function sendMsg() {
+      const input = document.getElementById("msgInput");
+      if (!input.value.trim() || !isConnected) return;
+      
+      ws.send(JSON.stringify({ content: input.value }));
+      input.value = "";
+      input.focus();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    document.getElementById("msgInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMsg();
+      }
+    });
+
+    showUsernamePrompt();
+  </script>
+</body>
+</html>
