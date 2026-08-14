@@ -428,196 +428,87 @@
     // ==============================
 
     function connectWebSocket() {
-
-      /*
-       * HTTP  -> ws://
-       * HTTPS -> wss://
-       */
-
-      const protocol =
-        location.protocol === "https:"
-          ? "wss:"
-          : "ws:";
-
-      const wsUrl =
-        `${protocol}//${location.host}/ws?username=${encodeURIComponent(username)}`;
-
-      console.log("Connecting WebSocket:", wsUrl);
-
-      const ws =
-        new WebSocket(wsUrl);
-
-      const messagesEl =
-        document.getElementById("messages");
-
-      const input =
-        document.getElementById("msgInput");
-
-
-      // ==============================
-      // CONNECTED
-      // ==============================
-
-      ws.onopen = () => {
-
-        isConnected = true;
-
-        console.log("WebSocket connected");
-
-        input.focus();
-
-      };
-
-
-      // ==============================
-      // RECEIVE MESSAGE
-      // ==============================
-
-      ws.onmessage = (event) => {
-
-        try {
-
-          const msg =
-            JSON.parse(event.data);
-
-          const div =
-            document.createElement("div");
-
-
-          // JOIN / LEAVE
-
-          if (
-            msg.type === "join" ||
-            msg.type === "leave"
-          ) {
-
-            div.className =
-              "system-message";
-
-            const action =
-              msg.type === "join"
-                ? "bergabung"
-                : "pergi";
-
-            div.textContent =
-              `✦ ${msg.username} ${action}`;
-
-          }
-
-
-          // CHAT MESSAGE
-
-          else {
-
-            div.className =
-              `message ${
-                msg.username === username
-                  ? "own"
-                  : "other"
-              }`;
-
-            div.innerHTML = `
-
-              <div class="message-content">
-
-                ${
-                  msg.username !== username
-                    ? `
-                      <div class="message-header">
-                        ${escapeHtml(msg.username)}
-                      </div>
-                    `
-                    : ""
-                }
-
-                <div>
-                  ${escapeHtml(msg.content)}
-                </div>
-
-                ${
-                  msg.username === username
-                    ? `
-                      <div class="message-header">
-
-                        ${new Date().toLocaleTimeString(
-                          "id-ID",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit"
-                          }
-                        )}
-
-                      </div>
-                    `
-                    : ""
-                }
-
-              </div>
-
-            `;
-
-          }
-
-
-          messagesEl.appendChild(div);
-
-          messagesEl.scrollTop =
-            messagesEl.scrollHeight;
-
-        }
-
-        catch (error) {
-
-          console.error(
-            "Gagal membaca message:",
-            error
-          );
-
-        }
-
-      };
-
-
-      // ==============================
-      // ERROR
-      // ==============================
-
-      ws.onerror = (error) => {
-
-        console.error(
-          "WebSocket error:",
-          error
-        );
-
-        isConnected = false;
-
-      };
-
-
-      // ==============================
-      // CLOSE
-      // ==============================
-
-      ws.onclose = () => {
-
-        console.log(
-          "WebSocket disconnected"
-        );
-
-        isConnected = false;
-
-      };
-
-
-      /*
-       * Simpan WebSocket secara global
-       * supaya sendMsg() bisa menggunakannya.
-       */
-
-      window.ws = ws;
-
+  const wsUrl =
+    `wss://chat-realtime-production-73a7.up.railway.app/ws?username=${encodeURIComponent(username)}`;
+
+  console.log("Connecting WebSocket:", wsUrl);
+
+  const ws = new WebSocket(wsUrl);
+
+  const messagesEl = document.getElementById("messages");
+  const input = document.getElementById("msgInput");
+
+  ws.onopen = () => {
+    isConnected = true;
+    console.log("WebSocket connected");
+    input.focus();
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      const div = document.createElement("div");
+
+      if (msg.type === "join" || msg.type === "leave") {
+        div.className = "system-message";
+
+        const action =
+          msg.type === "join" ? "bergabung" : "pergi";
+
+        div.textContent =
+          `✦ ${msg.username} ${action}`;
+      } else {
+        div.className =
+          `message ${
+            msg.username === username ? "own" : "other"
+          }`;
+
+        div.innerHTML = `
+          <div class="message-content">
+            ${
+              msg.username !== username
+                ? `<div class="message-header">
+                     ${escapeHtml(msg.username)}
+                   </div>`
+                : ""
+            }
+
+            <div>${escapeHtml(msg.content)}</div>
+
+            ${
+              msg.username === username
+                ? `<div class="message-header">
+                     ${new Date().toLocaleTimeString("id-ID", {
+                       hour: "2-digit",
+                       minute: "2-digit"
+                     })}
+                   </div>`
+                : ""
+            }
+          </div>
+        `;
+      }
+
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    } catch (error) {
+      console.error("Gagal membaca message:", error);
     }
+  };
 
+  ws.onerror = (error) => {
+    console.error("WebSocket error:", error);
+    isConnected = false;
+  };
+
+  ws.onclose = () => {
+    console.log("WebSocket disconnected");
+    isConnected = false;
+  };
+
+  window.ws = ws;
+}
 
     // ==============================
     // SEND MESSAGE
